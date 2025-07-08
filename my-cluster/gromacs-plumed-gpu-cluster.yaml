@@ -156,7 +156,7 @@ deployment_groups:
             - cuda_mpis:
                 - openmpi@4.1.4+cuda
             - mpi_cuda_packages:
-                - gromacs@2024.5+cuda+mpi+plumed ^plumed@2.9.0
+                - gromacs@2022.3+cuda+mpi #gromacs@2024.5+cuda+mpi+plumed ^plumed@2.9.0
             specs:
             - $compilers
             - matrix:
