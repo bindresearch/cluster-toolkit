@@ -34,7 +34,7 @@ cd ${HOME}/programs/gromacs-2024.5 && \
     plumed patch -p --runtime -e gromacs-2024.3
 
 # Build and install GROMACS
-mkdir ${HOME}/programs/gromacs-2024.5/build && cd ${HOME}programs/gromacs-2024.5/build && \
+mkdir ${HOME}/programs/gromacs-2024.5/build && cd ${HOME}/programs/gromacs-2024.5/build && \
     cmake .. \
     -DCMAKE_INSTALL_PREFIX=${HOME}/programs/install/gromacs-install \
     -DGMX_MPI=ON \
