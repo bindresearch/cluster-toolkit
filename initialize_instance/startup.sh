@@ -15,7 +15,7 @@ set -ex
 
 
 sudo apt-get update
-sudo apt-get install -y ubuntu-drivers-common
+sudo apt-get install -y ubuntu-drivers-common vim unzip
 sudo ubuntu-drivers autoinstall
 
 sudo apt-get install -y nvidia-driver-535
