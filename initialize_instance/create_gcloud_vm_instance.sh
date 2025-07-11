@@ -19,7 +19,7 @@ gcloud compute instances create ${INSTANCE_NAME} \
     --zone=${ZONE} \
     --machine-type=${CPU_MACHINE} \
     --network-interface=network-tier=PREMIUM,stack-type=IPV4_ONLY,subnet=default \
-    --metadata=enable-osconfig=TRUE \
+    --metadata=enable-osconfig=TRUE,docker_user=candide_champion_bind_research_c \
     --metadata-from-file startup-script=startup.sh \
     --maintenance-policy=TERMINATE \
     --provisioning-model=STANDARD \

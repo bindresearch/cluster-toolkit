@@ -39,6 +39,10 @@ sudo apt-get update
 sudo apt-cache policy docker-ce
 sudo apt-get install -y docker-ce
 
+# This is to avoid having to call docker with sudo
+USERNAME=$(curl -s http://metadata.google.internal/computeMetadata/v1/instance/attributes/docker_user -H "Metadata-Flavor: Google")
+usermod -aG docker "$USERNAME"
+
 echo "\n\ndocker succesfully installed\n\n\n"
 
 # Ways to get docker to run without pre-pending sudo require password, skipping for now 
