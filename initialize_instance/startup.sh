@@ -20,16 +20,11 @@ sudo ubuntu-drivers autoinstall
 
 sudo apt-get install -y nvidia-driver-535
 
-#
-# Docker install 
-#
-
 echo "\n\nnvidia drivers succesfully installed\n\n\n"
 
 #
-# Note, needed to reboot here as code needed to be run manually after here. (i.e. didn't work from startup script)
-# I will need to fix this later on
-# 
+# Docker install 
+#
 
 sudo apt-get install -y apt-transport-https ca-certificates curl software-properties-common
 
@@ -44,9 +39,6 @@ USERNAME=$(curl -s http://metadata.google.internal/computeMetadata/v1/instance/a
 usermod -aG docker "$USERNAME"
 
 echo "\n\ndocker succesfully installed\n\n\n"
-
-# Ways to get docker to run without pre-pending sudo require password, skipping for now 
-#todo later
 
 #
 # Install CUDA container
@@ -81,7 +73,7 @@ export NVIDIA_CONTAINER_TOOLKIT_VERSION=1.17.8-1
 
 echo "\n\nnvidia-container succesfully installed\n\n\n"
 
-# to test the install, you can run the following: sudo docker run --rm --runtime=nvidia --gpus all ubuntu nvidia-smi
+# to test the install, you can run the following: docker run --rm --runtime=nvidia --gpus all ubuntu nvidia-smi
 
 echo "\n\nstartup.sh succesfully completed."
 
