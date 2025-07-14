@@ -84,7 +84,7 @@ deployment_groups:
     source: community/modules/compute/schedmd-slurm-gcp-v6-partition
     use: [gpu_nodeset]
     settings:
-      partition_name: compute
+      partition_name: gpu
       is_default: true
 
   - id: gpu_nodeset
