@@ -1,5 +1,17 @@
 # Google Cluster Toolkit (formerly HPC Toolkit)
 
+This fork of the google cluster repository contains **two additional directories** in 
+which we deposit configuration files (in `.yaml` or `.tf` format) showing how to automatically create compute instances on google cloud.
+
+   - In `cluster-toolkit/initialize_instance` a single VM instance with pre-defined startup scripts to install packages.
+   - In `cluster-toolkit/my-cluster` an autoscaling cluster to run containerized/classic programs.
+
+Documentation explaining how to startup those instances is provided in those directories.
+
+---
+
+Please find below the documentation of the cluster toolkit package from the original repository:
+
 ## Description
 
 Cluster Toolkit is an open-source software offered by Google Cloud which makes it
