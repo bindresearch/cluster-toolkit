@@ -1,6 +1,6 @@
 In order to create a cluster to run calculations on Google Cloud, follow the instructions below: 
 
-The file `gromacs-plumed-gpu-cluster.yaml` contains all of the configuration information required to setup the cluster (e.g., how large will the cluster be, which GPU/CPU models it will use, which region will it run in, programs installed, etc.).
+The file `hpc-slurm6-apptainer.yaml` (or any of the other `.yaml` files here) contains all of the configuration information required to setup the cluster (e.g., how large will the cluster be, which GPU/CPU models it will use, which region will it run in, programs installed, etc.).
 
 Make sure you compile `gcluster` by following the instructions in the root directory of this repository.
 
