@@ -1,2 +1,2 @@
 #!/bin/bash
-../gcluster deploy gromacs-plumed-cluster
+../gcluster deploy slurm6-apptainer 

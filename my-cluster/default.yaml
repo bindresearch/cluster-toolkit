@@ -17,13 +17,13 @@
 # See instructions at
 # https://github.com/GoogleCloudPlatform/hpc-toolkit/tree/main/examples#image-builderyaml-
 
-blueprint_name: hpc-slurm6-apptainer
+blueprint_name: default-apptainer-cluster
 
 vars:
   project_id:  ## Set GCP Project ID Here ##
-  deployment_name: slurm6-apptainer
-  region: europe-west1
-  zone: europe-west1-b
+  deployment_name: default-cluster
+  region: us-central1
+  zone: us-central1-c
   custom_image:
     family: apptainer-enabled
     project: $(vars.project_id)
@@ -48,6 +48,7 @@ deployment_groups:
           #!/bin/sh
           dnf install -y epel-release
           dnf install -y apptainer
+          dnf install slurm-pmi-devel
           dnf install -y openmpi openmpi-devel
 
 - group: packer
@@ -74,14 +75,19 @@ deployment_groups:
     source: community/modules/compute/schedmd-slurm-gcp-v6-nodeset
     use: [network]
     settings:
-      node_count_dynamic_max: 5
+      node_count_dynamic_max: 20
       disk_size_gb: $(vars.disk_size)
       instance_image: $(vars.custom_image)
       instance_image_custom: true
       bandwidth_tier: gvnic_enabled
       allow_automatic_updates: false
-      machine_type: c2-standard-16 # this is a high performance CPU
-      # default is c2-standard-60
+      # machine_type: c2-standard-60 this is the default value
+  - id: gpu_partition
+    source: community/modules/compute/schedmd-slurm-gcp-v6-partition
+    use: [gpu_nodeset]
+    settings:
+      partition_name: gpu
+
   - id: gpu_nodeset
     source: community/modules/compute/schedmd-slurm-gcp-v6-nodeset
     use: [network]
@@ -93,21 +99,16 @@ deployment_groups:
       instance_image_custom: true
       bandwidth_tier: gvnic_enabled
       allow_automatic_updates: false
-      machine_type: g2-standard-4 # L4 
-  
-  - id: gpu_partition
-    source: community/modules/compute/schedmd-slurm-gcp-v6-partition
-    use: [gpu_nodeset]
-    settings:
-      partition_name: gpu
-  
+      machine_type: g2-standard-4
+
   - id: compute_partition
     source: community/modules/compute/schedmd-slurm-gcp-v6-partition
     use: [compute_nodeset]
     settings:
       partition_name: compute
       is_default: true
-  
+
+
   - id: slurm_login
     source: community/modules/scheduler/schedmd-slurm-gcp-v6-login
     use: [network]
@@ -130,4 +131,3 @@ deployment_groups:
       disk_size_gb: $(vars.disk_size)
       instance_image: $(vars.custom_image)
       instance_image_custom: true
-

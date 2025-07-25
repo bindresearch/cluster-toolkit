@@ -1,2 +1,2 @@
 #!/bin/bash
-../gcluster destroy gromacs-plumed-cluster
+../gcluster destroy slurm6-apptainer
