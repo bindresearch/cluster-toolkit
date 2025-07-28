@@ -50,7 +50,15 @@ deployment_groups:
           #!/bin/sh
           dnf install -y epel-release
           dnf install -y apptainer
-          dnf install -y openmpi openmpi-devel
+          #
+          # manual installation of openmpi
+          wget https://download.open-mpi.org/release/open-mpi/v4.1/openmpi-4.1.6.tar.gz
+          tar -xzf openmpi-4.1.6.tar.gz
+          cd openmpi-4.1.6
+          ./configure --prefix=$HOME/opt/openmpi --with-pmix=internal
+          make -j$$\(nproc\)
+          make install
+
 
 - group: packer
   modules:
@@ -68,7 +76,7 @@ deployment_groups:
       # gcloud compute images describe-from-family <source_image_family> --project schedmd-slurm-public
       disk_size: $(vars.persistent_disk_size)
       image_family: $(vars.custom_image.family)
-      state_timeout: 15m
+      state_timeout: 30m
 
 - group: cluster
   modules:
