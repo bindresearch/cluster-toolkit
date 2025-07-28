@@ -1,0 +1,144 @@
+# Copyright 2024 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+---
+
+# See instructions at
+# https://github.com/GoogleCloudPlatform/hpc-toolkit/tree/main/examples#image-builderyaml-
+
+blueprint_name: spot-hpc-slurm6-apptainer
+
+# List of variables accesible globaly in this blueprint. (with $(vars.var_name))
+vars:
+  project_id:  ## Set GCP Project ID Here ##
+  deployment_name: spot-slurm6-apptainer
+  region: europe-west1
+  zone: europe-west1-b
+  custom_image:
+    family: apptainer-enabled
+    project: $(vars.project_id)
+  persistent_disk_size: 1280 # Size of the global persistent disk in GB
+  enable_spot_vm: true
+# Documentation for each of the modules used below can be found at
+# https://github.com/GoogleCloudPlatform/hpc-toolkit/blob/main/modules/README.md
+
+deployment_groups:
+- group: primary
+  modules:
+  - id: network
+    source: modules/network/vpc
+  
+  # This is a definition of a startup script (called by packer)
+  - id: scripts_for_image
+    source: modules/scripts/startup-script
+    settings:
+      runners:
+      - type: shell
+        destination: install_apptainer.sh
+        content: |
+          #!/bin/sh
+          dnf install -y epel-release
+          dnf install -y apptainer
+          dnf install -y openmpi openmpi-devel
+
+- group: packer
+  modules:
+  - id: apptainer-enabled-image
+    source: modules/packer/custom-image
+    kind: packer
+    use:
+    - network
+    - scripts_for_image
+    settings:
+      source_image_project_id: [schedmd-slurm-public]
+      # see latest in https://github.com/GoogleCloudPlatform/slurm-gcp/blob/master/docs/images.md#published-image-family
+      source_image_family: slurm-gcp-6-9-hpc-rocky-linux-8
+      # You can find size of source image by using following command
+      # gcloud compute images describe-from-family <source_image_family> --project schedmd-slurm-public
+      disk_size: $(vars.persistent_disk_size)
+      image_family: $(vars.custom_image.family)
+      state_timeout: 15m
+
+- group: cluster
+  modules:
+  - id: compute_nodeset
+    source: community/modules/compute/schedmd-slurm-gcp-v6-nodeset
+    use: [network]
+    settings:
+      name: compute_node
+      node_count_dynamic_max: 20
+      enable_spot_vm: $(vars.enable_spot_vm)
+      machine_type: c2-standard-16 # this is a high performance CPU (default is c2-standard-60)
+      # Image (OS)
+      instance_image: $(vars.custom_image)
+      instance_image_custom: true
+      # Network
+      bandwidth_tier: gvnic_enabled
+      allow_automatic_updates: false
+      # Storage
+      disk_size_gb: $(vars.persistent_disk_size)
+
+  - id: gpu_nodeset
+    source: community/modules/compute/schedmd-slurm-gcp-v6-nodeset
+    use: [network]
+    settings:
+      name: gpu_node
+      node_count_dynamic_max: 20
+      machine_type: g2-standard-4 # L4 GPU
+      enable_spot_vm: $(vars.enable_spot_vm)
+      # Image (OS)
+      instance_image: $(vars.custom_image)
+      instance_image_custom: true
+      # Network
+      bandwidth_tier: gvnic_enabled
+      allow_automatic_updates: false
+      # Storage
+      disk_size_gb: $(vars.persistent_disk_size)
+      
+  - id: gpu_partition
+    source: community/modules/compute/schedmd-slurm-gcp-v6-partition
+    use: [gpu_nodeset]
+    settings:
+      partition_name: gpu
+  
+  - id: compute_partition
+    source: community/modules/compute/schedmd-slurm-gcp-v6-partition
+    use: [compute_nodeset]
+    settings:
+      partition_name: compute
+      is_default: true
+  
+  - id: slurm_login
+    source: community/modules/scheduler/schedmd-slurm-gcp-v6-login
+    use: [network]
+    settings:
+      name_prefix: login
+      enable_login_public_ips: true
+      disk_size_gb: $(vars.persistent_disk_size)
+      instance_image: $(vars.custom_image)
+      instance_image_custom: true
+
+  - id: slurm_controller
+    source: community/modules/scheduler/schedmd-slurm-gcp-v6-controller
+    use:
+    - network
+    - compute_partition
+    - slurm_login
+    - gpu_partition
+    settings:
+      enable_controller_public_ips: true
+      disk_size_gb: $(vars.persistent_disk_size)
+      instance_image: $(vars.custom_image)
+      instance_image_custom: true
+
