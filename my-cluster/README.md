@@ -51,3 +51,24 @@ unzip rnanvt-nhr-fau.zip
 
 apptainer run --nv /home/candide_champion_bind_research_c/gromacs-plumed.sif gmx_mpi mdrun -s rnanvt-nhr-fau.tpr -deffnm output -nsteps 60000 -resetstep 50000 # additional gromacs options ... 
 ```
+```
+# submit_gpu_mpi.sh (multiple replicas on a single GPU)
+
+#!/bin/bash
+#SBATCH --job-name=test-job-gpu
+#SBATCH --partition=gpu
+#SBATCH --time=00:30:00
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=2 #note: maximum here is the number of CPUs on the GPU node
+#SBATCH --cpus-per-task=1
+
+# run this in an empty directory
+
+wget https://hpc.fau.de/files/2022/02/rnanvt-nhr-fau.zip && unzip rnanvt-nhr-fau.zip
+
+mkdir dir0 dir1 
+cp rnanvt-nhr-fau.tpr dir0/topol.tpr
+cp rnanvt-nhr-fau.tpr dir1/topol.tpr 
+
+/opt/openmpi/bin/mpirun -np 2 apptainer run --nv /home/candide_champion_bind_research_c/gromacs-plumed.sif gmx_mpi mdrun -multidir dir0 dir1 
+```
