@@ -1,0 +1,53 @@
+Bootstrap: docker
+From: nvidia/cuda:12.2.2-devel-ubuntu22.04
+
+%environment
+	export PATH=/usr/local/bin:$PATH
+
+%post
+    cd /opt
+	apt-get -y update
+	apt-get -y install wget\
+		git\
+		cmake\
+		build-essential\
+		openmpi-bin openmpi-common openssh-client openssh-server libopenmpi-dev\
+		libpng-dev zlib1g-dev gfortran ffmpeg libopenblas-dev libgsl-dev pkg-config curl
+	
+
+	# ----------------------------
+	# Install PLUMED 2.10
+	# ----------------------------
+	cd /opt
+	wget https://github.com/plumed/plumed2/releases/download/v2.10.0/plumed-2.10.0.tgz
+	tar -xzf plumed-2.10.0.tgz
+	cd plumed-2.10.0
+	./configure --prefix=/opt/plumed
+	make -j$(nproc)
+	make install
+	
+	# Make it visible for LAMMPS:
+	export PKG_CONFIG_PATH=/opt/plumed/lib/pkgconfig
+
+	# ----------------------------
+	# Build LAMMPS
+	# ----------------------------
+
+	#git clone -b stable_2Aug2023_update1 https://github.com/lammps/lammps.git lammps
+	wget https://download.lammps.org/tars/lammps-2Aug2023.tar.gz
+	tar -xzf lammps-2Aug2023.tar.gz
+	mv lammps-2Aug2023 lammps
+        cd lammps
+	
+	curl -O https://raw.githubusercontent.com/COSBlab/bAIes-IDP/main/installation/patch_cmap.txt
+	patch ./src/MOLECULE/fix_cmap.cpp < patch_cmap.txt
+	
+		mkdir build
+		cd build
+		cmake -D CMAKE_INSTALL_PREFIX=/usr/local -DCMAKE_LIBRARY_PATH=/usr/local/cuda/lib64/stubs -DBIN2C=/usr/local/cuda/bin/bin2c -D LAMMPS_MACHINE=gpu -D PKG_MOLECULE=on -D PKG_ASPHERE=on -D PKG_BODY=on -D PKG_CLASS2=on -D PKG_COLLOID=on -D PKG_COMPRESS=on -D PKG_CORESHELL=on -D PKG_DIPOLE=on -D PKG_EXTRA-DUMP=ON -D PKG_EXTRA-FIX=ON -D PKG_GRANULAR=on -D PKG_KSPACE=on -D PKG_MANYBODY=on -D PKG_MC=on -D PKG_MISC=on -D PKG_PERI=on -D PKG_QEQ=on -D PKG_RIGID=on -D PKG_SHOCK=on -D PKG_SNAP=on -D PKG_SRD=on -D PKG_USER-REAXC=on -D PKG_USER-TALLY=on -D PKG_GPU=on -D GPU_API=cuda -D PKG_PLUMED=ON -D DOWNLOAD_PLUMED=NO -D PLUMED_MODE=runtime -D PKG_CONFIG_PATH=/opt/plumed/lib/pkgconfig ../cmake # -D GPU_ARCH=sm_70
+		make -j$(nproc)
+		make install       
+
+%runscript
+
+	lmp_gpu "$@"
